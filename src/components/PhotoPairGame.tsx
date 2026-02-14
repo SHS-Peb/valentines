@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
+const base = process.env.NODE_ENV === "production" ? "/valentines" : "";
+
 // 18 images
 const images = [
   "/game-photos/1.avif",
@@ -57,23 +59,27 @@ export default function PhotoPairGame({
   const [selected, setSelected] = useState<number[]>([]);
   const [matched, setMatched] = useState<number[]>([]);
   const [incorrect, setIncorrect] = useState<number[]>([]);
-  const [images] = useState(() => shuffleArray([...imagePairs]));
+  const [imagesState] = useState(() => shuffleArray([...imagePairs]));
 
   const handleClick = async (index: number) => {
-    if (selected.length === 2 || matched.includes(index) || selected.includes(index)) return;
+    if (
+      selected.length === 2 ||
+      matched.includes(index) ||
+      selected.includes(index)
+    )
+      return;
 
     if (selected.length === 1) {
       const firstIndex = selected[0];
       setSelected((prev) => [...prev, index]);
 
-      if (images[firstIndex] === images[index]) {
+      if (imagesState[firstIndex] === imagesState[index]) {
         setMatched((prev) => [...prev, firstIndex, index]);
         setSelected([]);
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
-
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         setIncorrect([firstIndex, index]);
-        setTimeout(() => setIncorrect([]), 1000); // Clear incorrect after 1 second
+        setTimeout(() => setIncorrect([]), 1000);
         setTimeout(() => setSelected([]), 1000);
       }
     } else {
@@ -81,7 +87,6 @@ export default function PhotoPairGame({
     }
   };
 
-  // Check if game is won
   useEffect(() => {
     if (matched.length === imagePairs.length) {
       handleShowProposal();
@@ -92,10 +97,10 @@ export default function PhotoPairGame({
     <div className="grid grid-cols-9 gap-1 lg:gap-2 max-w-[95vw] mx-auto place-items-center">
       {/* Image preload */}
       <div className="hidden">
-        {images.map((image, i) => (
+        {imagesState.map((image, i) => (
           <Image
             key={i}
-            src={image}
+            src={`${base}${image}`}
             alt={`Image ${i + 1}`}
             fill
             className="object-cover"
@@ -111,9 +116,8 @@ export default function PhotoPairGame({
             className="w-[11vh] h-[11vh] lg:w-20 lg:h-20 relative cursor-pointer"
             whileHover={{ scale: 1.1 }}
             onClick={() => handleClick(index)}
-            style={{ perspective: "1000px" }} // Add perspective for 3D effect
+            style={{ perspective: "1000px" }}
           >
-            {/* Back of the card */}
             {!selected.includes(index) && !matched.includes(index) && (
               <motion.div
                 className="w-full h-full bg-gray-300 rounded-sm lg:rounded-md absolute z-10"
@@ -129,7 +133,6 @@ export default function PhotoPairGame({
               />
             )}
 
-            {/* Front of the card (image) */}
             {(selected.includes(index) || matched.includes(index)) && (
               <motion.div
                 className="w-full h-full absolute"
@@ -139,7 +142,7 @@ export default function PhotoPairGame({
                 style={{ backfaceVisibility: "hidden" }}
               >
                 <Image
-                  src={images[index]}
+                  src={`${base}${imagesState[index]}`}
                   alt={`Imagen ${index + 1}`}
                   fill
                   className="rounded-sm lg:rounded-md object-cover"
@@ -147,7 +150,6 @@ export default function PhotoPairGame({
               </motion.div>
             )}
 
-            {/* Incorrect animation */}
             {incorrect.includes(index) && (
               <motion.div
                 className="absolute inset-0"
